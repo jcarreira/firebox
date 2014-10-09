@@ -82,22 +82,6 @@ my $first_print = 1;
 print "library(plotrix)\n";
 print "info2<-list(labels=c(";
 for my $node (1..$NUM_NODES) {
-#    my $node = $_;
-#    my @start_times = @{$start_per_node{$_}};
-#    my @finish_times = @{$finish_per_node{$_}};
-#
-#    next unless scalar @start_times;
-#
-#    if ($first_print) {
-#        $first_print = 0;
-#        shift @start_times;
-#        print "\"Node$node\"";
-#    }
-#
-#    for my $start_time (@start_times) {
-#        print ",\"Node$node\"";
-#    }
-#
 
     my $start_point = 1;
     if ($first_print) {
@@ -239,53 +223,4 @@ for my $node (1..$NUM_NODES) {
 }
 #            taskcolors=c(2,3,7,4,8,5,3,6,"purple"),border.col="black")
 print "))\n\n";
-
-##$first_print = 1;
-#2. print starts
-##print "starts=c(";
-##for (1..16) {
-##    my $node = $_;
-##    my @start_times = @{$start_per_node{$_}};
-##    my @finish_times = @{$finish_per_node{$_}};
-##
-##    next unless scalar @start_times;
-##
-##    if ($first_print) {
-##        $first_print = 0;
-##        my $start_time = shift @start_times;
-##        print "$start_time";
-##    }
-##
-##    for my $start_time (@start_times) {
-##        print ",$start_time";
-##    }
-##}
-##print "),\n";
-##
-##$first_print = 1;
-###3. print starts
-##print "ends=c(";
-##for (1..16) {
-##    my $node = $_;
-##    my @start_times = @{$start_per_node{$_}};
-##    my @finish_times = @{$finish_per_node{$_}};
-##
-##    next unless scalar @start_times;
-##
-##    if ($first_print) {
-##        $first_print = 0;
-##        my $finish_time = shift @finish_times;
-##        print "$finish_time";
-##    }
-##
-##    for my $finish_time (@finish_times) {
-##        print ",$finish_time";
-##    }
-##}
-
-#print "gantt.chart(info2,vgridlab=0:$max_finish_time,vgridpos=0:$max_finish_time, main=\"Node utilization\",taskcolors=\"lightgray\")";
-
-#            taskcolors=c(2,3,7,4,8,5,3,6,"purple"),border.col="black")
-
-#<Start (time), End (time), Start (time), Start(time)>
 

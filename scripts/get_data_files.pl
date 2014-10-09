@@ -3,9 +3,12 @@
 use strict;
 use warnings;
 
-for my $i (1..16) {
+my $NODES = 16;
+my $USER = 'joao';
+
+for my $i (1..$NODES) {
 	print "Getting file from f$i\n";
-	`scp joao\@fbox.millennium.berkeley.edu:~/dstat_data/out_f$i data/data_original/`;
+	`scp $USER\@fbox.millennium.berkeley.edu:~/dstat_data/out_f$i data/data_original/`;
 	`tail -n+7 data/data_original/out_f$i > data/data_original/metrics_$i`;
 	`Rscript plot.r $i data/data_original/metrics_$i data/data_results/plot_f$i.pdf`;
 	`rm data/data_original/out_f$i`;
