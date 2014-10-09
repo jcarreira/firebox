@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use Math::Round;
 
 my %tid_to_node; # task id to node num
 my %tid_to_start; # task id to start time
@@ -25,14 +26,17 @@ sub time_to_seconds {
     my $minute = shift;
     my $seconds = shift;
 
-    return ($hour * 60 * 60) +
-    ($minute * 60) + $seconds;
+    return ($hour * 60 * 60) + ($minute * 60) + $seconds;
 }
 
+my %num_tasks_per_node; # per node holds a list of tasks per second
+my %total_times;
 # initialize start_per_node and finish_per_node
-for (1..16) {
+for (1..$NUM_NODES) {
     $start_per_node{$_} = [];
     $finish_per_node{$_} = [];
+    $total_times{$_} = [];
+    $num_tasks_per_node{$_} = [];
 }
 
 while (<>) {
@@ -77,20 +81,31 @@ my $first_print = 1;
 #1. print labels
 print "library(plotrix)\n";
 print "info2<-list(labels=c(";
-for (1..$NUM_NODES) {
-    my $node = $_;
-    my @start_times = @{$start_per_node{$_}};
-    my @finish_times = @{$finish_per_node{$_}};
+for my $node (1..$NUM_NODES) {
+#    my $node = $_;
+#    my @start_times = @{$start_per_node{$_}};
+#    my @finish_times = @{$finish_per_node{$_}};
+#
+#    next unless scalar @start_times;
+#
+#    if ($first_print) {
+#        $first_print = 0;
+#        shift @start_times;
+#        print "\"Node$node\"";
+#    }
+#
+#    for my $start_time (@start_times) {
+#        print ",\"Node$node\"";
+#    }
+#
 
-    next unless scalar @start_times;
-
+    my $start_point = 1;
     if ($first_print) {
         $first_print = 0;
-        shift @start_times;
+        $start_point = 2;
         print "\"Node$node\"";
     }
-
-    for my $start_time (@start_times) {
+    for ($start_point..$max_finish_time) {
         print ",\"Node$node\"";
     }
 }
@@ -99,7 +114,7 @@ print "),\n";
 # print starts
 print "starts=c(0";
 for my $run (1..$NUM_NODES){
-    for (($run == 1 ? 1 : 0)..$max_finish_time) {
+    for (($run == 1 ? 1 : 0)..$max_finish_time-1) {
         print ",$_";
     }
 }
@@ -112,54 +127,118 @@ for my $run (1..$NUM_NODES){
         print ",$_";
     }
 }
-print "),\n";
+print "))\n\n";
 
-my %total_times;
 for my $node (1..$NUM_NODES) {
-    my @start_times = @{$start_per_node{$_}};
-    my @finish_times = @{$finish_per_node{$_}};
+    my @start_times = @{$start_per_node{$node}};
+    my @finish_times = @{$finish_per_node{$node}};
 
     for (@start_times) {
-        push @{$total_times{$node}}, \($_, $START_TIME);
+        push @{$total_times{$node}}, [$_, $START_TIME];
     }
     for (@finish_times) {
-        push @{$total_times{$node}}, \($_, $END_TIME);
+        push @{$total_times{$node}}, [$_, $END_TIME];
     }
 }
 
+my %total_sorted_times;
 for my $node (1..$NUM_NODES) {
     my @sorted_times = sort { 
         my @a_ = @{$a}; 
         my @b_ = @{$b}; 
         return $a_[0] <=> $b_[0]; 
     } @{$total_times{$node}};
+
+    $total_sorted_times{$node} = \@sorted_times;
 }
 
-my %num_tasks_per_node; # per node holds a list of tasks per second
 # go sec by sec and record the number of tasks running on each node
 for my $node (1..$NUM_NODES) {
 # defines the period we are looking at
     my $start_tasks_time = 0; 
     my $num_tasks = 0; # we start with 0 tasks
 
-    my @node_times_list = @{$total_times{$node}};
+    my @node_times_list = @{$total_sorted_times{$node}}; # list of <time, time type>
 
     while (1) {
-        my $initial_time = ${@{$nodes_times_list[0]}}[0]; # get time from pair <time, type of time>
-        while ($start_tasks_time < $initial_time # go until next time record
+        last unless scalar @node_times_list > 0; # if there are no records exit
+
+        my @first_pair = @{$node_times_list[0]};
+        my $next_time = $first_pair[0]; # get time from pair <time, type of time>
+
+        while ($start_tasks_time < $next_time # go until next time record
         && $start_tasks_time < $max_finish_time) { # stop when reaching the last record
             $start_tasks_time++; # advance one second
             push @{$num_tasks_per_node{$node}}, $num_tasks;
+            #   print "$max_finish_time $next_time start_tasks_time: $start_tasks_time ", scalar  @{$num_tasks_per_node{$node}}, "\n";
         }
 
-        while ($start_tasks_time <= $initial_time) {
-            my $time_type = 
+        while ($start_tasks_time == $next_time) {
+            #print "$next_time\n";
+            my $time_type = $first_pair[1];
+
+            if ($time_type == $START_TIME)  {
+                $num_tasks++;
+            } elsif ($time_type == $END_TIME) {
+                $num_tasks--;
+            } else { die; }
+            die unless $num_tasks >= 0;
+
+            shift @node_times_list;
+            last if scalar @node_times_list == 0;
+            @first_pair = @{$node_times_list[0]};
+            $next_time = $first_pair[0]; # get time from pair <time, type of time>
         }
 
+        #     print "ending $start_tasks_time\n" if $start_tasks_time == $max_finish_time;
         last if $start_tasks_time == $max_finish_time;
+        #print "$start_tasks_time $next_time $max_finish_time\n";
+    
     }
+
+    # some nodes may not have task spanning the whole time spectrum
+    while (scalar @{$num_tasks_per_node{$node}} < $max_finish_time) {
+        push @{$num_tasks_per_node{$node}}, 0;
+    }
+
+    #print "node: $node\n" unless scalar @{$num_tasks_per_node{$node}} == $max_finish_time;
+    print scalar @{$num_tasks_per_node{$node}} unless scalar @{$num_tasks_per_node{$node}} == $max_finish_time;
+    die unless scalar @{$num_tasks_per_node{$node}} == $max_finish_time;
 }
 
+my @colors=(
+    "#FFFFFF",
+    "#E8E8E8",
+    "#D8D8D8",
+    "#C8C8C8",
+    "#B8B8B8",
+    "#A8A8A8",
+    "#989898",
+    "#888888",
+    "#707070",
+    "#686868",
+    "#585858",
+    "#505050",
+    "#404040",
+    "#303030",
+    "#202020",
+    "#101010",
+    "#000000");
+
+
+print "gantt.chart(info2,priority.extremes=c(\"High task utilization\",\"Low task utilization\"), priority.legend=FALSE,priority.label=\"Legend colors\", vgridlab=0:$max_finish_time,vgridpos=0:$max_finish_time, main=\"Node utilization\",taskcolors=c(";
+for my $node (1..$NUM_NODES) {
+    #print "Node $node: ";
+    
+    die unless scalar @{$num_tasks_per_node{$node}} == $max_finish_time;
+
+    for (@{$num_tasks_per_node{$node}}) {
+        print ",\"",$colors[$_], "\"";
+        #round($_/(16.0*1.0)*7.0);
+    }
+}
+#            taskcolors=c(2,3,7,4,8,5,3,6,"purple"),border.col="black")
+print "))\n\n";
 
 ##$first_print = 1;
 #2. print starts
@@ -204,13 +283,9 @@ for my $node (1..$NUM_NODES) {
 ##    }
 ##}
 
-        my @number_of_tasks;
-
-        print "))\n\n";
 #print "gantt.chart(info2,vgridlab=0:$max_finish_time,vgridpos=0:$max_finish_time, main=\"Node utilization\",taskcolors=\"lightgray\")";
-        print "gantt.chart(info2,vgridlab=0:$max_finish_time,vgridpos=0:$max_finish_time, main=\"Node utilization\",";
 
 #            taskcolors=c(2,3,7,4,8,5,3,6,"purple"),border.col="black")
 
-        <Start (time), End (time), Start (time), Start(time)>
+#<Start (time), End (time), Start (time), Start(time)>
 

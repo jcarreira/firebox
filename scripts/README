@@ -1,0 +1,6 @@
+get_data_files.pl: 
+
+
+get per-node metrics from each node (f1-f15) and compute plots
+USAGE: perl get_data_files.p
+RESULTS: go to data/data_results

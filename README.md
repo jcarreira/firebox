@@ -1,4 +1,7 @@
-firebox
-=======
+AUTHORS
 
-Firebox
+Joao Carreira
+
+DESCRIPTION
+
+Firebox scripts and utilities
