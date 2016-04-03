@@ -1,0 +1,9 @@
+Pthreads, MPI, OpenMP
+Queue example
+
+RDMA verbs
+
+Build RDMA prototype. Build virtual shared memory.
+
+
+read papers: farm, persistent memory
