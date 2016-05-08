@@ -26,14 +26,13 @@ sc = SparkContext(appName="Query3")
 sqlContext = SQLContext(sc)
 
 
-#lines = sc.textFile("/nscratch/joao/rankings.txt")
-lines = sc.textFile("/data/joao/rankings.txt")
+lines = sc.textFile("../../../../bdb/rankings/rankings.txt")
 parts = lines.map(lambda l: l.split(","))
 rankings = parts.map(lambda p: {"pageURL": p[0], "pageRank": int(p[1]), "avgDuration":int(p[2])})
 schemaRanking = sqlContext.inferSchema(rankings)
 schemaRanking.registerAsTable("rankings")
 
-lines = sc.textFile("/nscratch/joao/uservisits.txt")
+lines = sc.textFile("../../../../bdb/uservisits/uservisits.txt")
 parts = lines.map(lambda l: l.split(","))
 uservisits = parts.map(lambda p: {
         "sourceIP": p[0], 
@@ -46,9 +45,6 @@ uservisits = parts.map(lambda p: {
         "searchWord":p[7],
         "duration":int(p[8])})
 
-# Infer the schema, and register the SchemaRDD as a table.
-# In future versions of PySpark we would like to add support for registering RDDs with other
-# datatypes as tables
 schemaRanking = sqlContext.inferSchema(uservisits)
 schemaRanking.registerAsTable("uservisits")
 
@@ -56,20 +52,17 @@ num_query = int(sys.argv[1])
 
 print "Running query ", num_query
 
-# SQL can be run over SchemaRDDs that have been registered as a table.
-#urls = sqlContext.sql("SELECT pageURL FROM rankings WHERE pageRank > 1")
 if num_query == 1:
     urls = sqlContext.sql(QUERY_3a_HQL)
 elif num_query == 2:
-    urls = sqlContext.sql(QUERY_3a_HQL)
+    urls = sqlContext.sql(QUERY_3b_HQL)
 elif num_query == 3:
-    urls = sqlContext.sql(QUERY_3a_HQL)
+    urls = sqlContext.sql(QUERY_3c_HQL)
 else: assert 0
 
 print "Collecting"
 urls.collect()
 #for url in urls.collect():
 #    print url
-
 
 
