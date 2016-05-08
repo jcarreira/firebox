@@ -13,6 +13,7 @@ sqlContext = SQLContext(sc)
 
 # Load a text file and convert each line to a dictionary.
 lines = sc.textFile("/nscratch/joao/uservisits.txt")
+#lines = sc.textFile("/nscratch/joao/uservisits.txt")
 parts = lines.map(lambda l: l.split(","))
 uservisits = parts.map(lambda p: {
         "sourceIP": p[0], 
@@ -49,6 +50,4 @@ print "Collecting"
 urls.collect()
 #for url in urls.collect():
 #    print url
-
-
 

@@ -26,7 +26,8 @@ sc = SparkContext(appName="Query3")
 sqlContext = SQLContext(sc)
 
 
-lines = sc.textFile("/nscratch/joao/rankings.txt")
+#lines = sc.textFile("/nscratch/joao/rankings.txt")
+lines = sc.textFile("/data/joao/rankings.txt")
 parts = lines.map(lambda l: l.split(","))
 rankings = parts.map(lambda p: {"pageURL": p[0], "pageRank": int(p[1]), "avgDuration":int(p[2])})
 schemaRanking = sqlContext.inferSchema(rankings)

@@ -18,8 +18,7 @@ from pyspark import SparkContext
 #                 CREATE TABLE url_counts_total AS
 #                   SELECT SUM(count) AS totalCount, destpage
 #                   FROM url_counts_partial GROUP BY destpage;"""
-QUERY_4_HQL = """ SELECT TRANSFORM (line)
-                   USING "python /nscratch/joao/bigdata_benchmark/runner/udf/url_count.py" as (sourcePage,
+QUERY_4_HQL = """ SELECT TRANSFORM (line) USING 'python /nscratch/joao/old/bigdata_benchmark/runner/udf/url_count.py' as (sourcePage,
                    destPage, count) from documents;"""
 QUERY_4_HQL = " ".join(QUERY_4_HQL.replace("\n", "").split())
 

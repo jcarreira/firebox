@@ -3,7 +3,6 @@
 import sys,os
 
 assert len(sys.argv) == 2
-print "Running query: ", sys.argv[1]
 
 from pyspark import SparkContext
 sc = SparkContext(appName="PythonKMeans")
@@ -13,7 +12,9 @@ from pyspark.sql import SQLContext
 sqlContext = SQLContext(sc)
 
 # Load a text file and convert each line to a dictionary.
+#lines = sc.textFile("/data/joao/rankings.txt")
 lines = sc.textFile("/nscratch/joao/rankings.txt")
+#lines = sc.textFile("/nscratch/joao/1node-text/1node/rankings/rankings.txt")
 
 #lines.cache()
 
@@ -29,7 +30,11 @@ schemaRanking.registerAsTable("rankings")
 # SQL can be run over SchemaRDDs that have been registered as a table.
 #teenagers = sqlContext.sql("SELECT name FROM people WHERE age >= 13 AND age <= 19")
 
-num_query = sys.argv[1]
+print "Running query: ", sys.argv[1]
+num_query = int(sys.argv[1])
+#num_query = sys.argv[1]
+
+print "Num_query: " + str(num_query) + "\n"
 
 if num_query == 1:
     urls = sqlContext.sql("SELECT pageURL, pageRank FROM rankings WHERE pageRank > 10")
@@ -37,7 +42,9 @@ elif num_query == 2:
     urls = sqlContext.sql("SELECT pageURL, pageRank FROM rankings WHERE pageRank > 100")
 elif num_query == 3:
     urls = sqlContext.sql("SELECT pageURL, pageRank FROM rankings WHERE pageRank > 1000")
-else sys.exit(-1)
+elif num_query == 4:
+    urls = sqlContext.sql("SEECT pageURL, pageRank FROM ranks WERE pageRank > 1000")
+else: assert 0
 
 # The results of SQL queries are RDDs and support all the normal RDD operations.
 #teenNames = teenagers.map(lambda p: "Name: " + p.name)
